@@ -1,0 +1,57 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: eventos-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "14330:1433" # host:contenedor — cambiado porque 1433 ya estaba ocupado en tu PC.
+                      # El backend sigue usando "db:1433" internamente, esto no lo afecta.
+                      # Si quieres conectarte desde Azure Data Studio/SSMS, usa localhost,14330
+    volumes:
+      - mssql_data:/var/opt/mssql
+    healthcheck:
+      # Espera a que SQL Server esté realmente listo, no solo "arrancado".
+      # -C confía en el certificado autofirmado (necesario en imágenes recientes).
+      test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$DB_PASSWORD" -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eventos-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:5158
+      # Sobreescribimos el connection string de appsettings.json: "Server=db" en vez
+      # de "Server=localhost", porque dentro de la red de Docker los contenedores
+      # se llaman entre sí por el NOMBRE DEL SERVICIO, no por localhost.
+      ConnectionStrings__DefaultConnection: "Server=db;Database=EventosDB;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;"
+      Jwt__Key: ${JWT_KEY}
+    ports:
+      - "5158:5158"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: eventos-frontend
+    depends_on:
+      - backend
+    ports:
+      # Mapeado a 4200 a propósito: tu Angular tiene hardcodeado
+      # "http://localhost:5158/api/..." y tu backend permite CORS solo desde
+      # "http://localhost:4200". Si cambias este puerto, el login y todo lo
+      # demás van a fallar por CORS sin que sea un bug de Docker.
+      - "4200:80"
+
+volumes:
+  mssql_data:
