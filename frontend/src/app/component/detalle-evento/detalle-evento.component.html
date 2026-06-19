@@ -1,0 +1,76 @@
+<div class="detalle-container">
+  @if (isLoading()) {
+    <p class="mensaje-estado">Cargando evento...</p>
+  } @else if (errorMessage()) {
+    <p class="mensaje-estado error">{{ errorMessage() }}</p>
+  } @else if (evento(); as ev) {
+    <div class="detalle-card">
+      @if (ev.urlImagen) {
+        <img [src]="ev.urlImagen" [alt]="ev.nombre" class="detalle-imagen" />
+      }
+
+      <div class="detalle-contenido">
+        <span class="detalle-categoria">{{ ev.categoria }}</span>
+        <h1>{{ ev.nombre }}</h1>
+        <p class="detalle-organizador">Organizado por {{ ev.nombreOrganizador }}</p>
+
+        <p class="detalle-descripcion">{{ ev.descripcion }}</p>
+
+        <div class="detalle-datos">
+          <p><strong>Fecha:</strong> {{ ev.fecha | date: 'dd/MM/yyyy' }}</p>
+          <p><strong>Horario:</strong> {{ ev.horario }}</p>
+          <p><strong>Ubicación:</strong> {{ ev.ubicacion }}</p>
+          <p><strong>Dirección:</strong> {{ ev.direccion }}</p>
+          <p><strong>Cupos:</strong> {{ ev.inscritosActuales }} / {{ ev.aforoMaximo }}</p>
+          <p>
+            <strong>Precio:</strong>
+            @if (ev.esGratuito) {
+              <span class="badge-gratis">Gratis</span>
+            } @else {
+              Bs {{ ev.precio }}
+            }
+          </p>
+        </div>
+
+        <hr />
+
+        @if (!authService.estaAutenticado()) {
+          <p class="aviso-login">
+            <a routerLink="/login">Inicia sesión</a> para inscribirte a este evento.
+          </p>
+        } @else if (yaInscrito() || inscripcionExitosa()) {
+          <p class="ya-inscrito">✅ Ya estás inscrito en este evento.</p>
+        } @else {
+          <form [formGroup]="pagoForm" (ngSubmit)="inscribirse()" class="form-inscripcion">
+            @if (!ev.esGratuito) {
+              <div class="form-group">
+                <label for="referenciaPago">Referencia de pago</label>
+                <input
+                  id="referenciaPago"
+                  type="text"
+                  formControlName="referenciaPago"
+                  placeholder="Número de comprobante o referencia"
+                />
+                <small class="ayuda">
+                  Este evento tiene costo. Ingresa tu referencia de pago para confirmar la inscripción.
+                </small>
+              </div>
+            }
+
+            @if (inscripcionError()) {
+              <div class="server-error">{{ inscripcionError() }}</div>
+            }
+
+            <button type="submit" [disabled]="isInscribiendo()">
+              @if (isInscribiendo()) {
+                Inscribiendo...
+              } @else {
+                Inscribirme
+              }
+            </button>
+          </form>
+        }
+      </div>
+    </div>
+  }
+</div>

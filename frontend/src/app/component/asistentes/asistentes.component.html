@@ -1,0 +1,49 @@
+<div class="asistentes-container">
+  <h1>Asistentes del evento</h1>
+
+  @if (isLoading()) {
+    <p class="mensaje-estado">Cargando asistentes...</p>
+  } @else if (errorMessage()) {
+    <p class="mensaje-estado error">{{ errorMessage() }}</p>
+  } @else if (asistentes().length === 0) {
+    <p class="mensaje-estado">Todavía no hay inscritos en este evento.</p>
+  } @else {
+    @if (errorGuardado()) {
+      <div class="server-error">{{ errorGuardado() }}</div>
+    }
+
+    <table class="tabla-asistentes">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Correo</th>
+          <th>Pago</th>
+          <th>Asistió</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (asistente of asistentes(); track asistente.inscripcionId) {
+          <tr>
+            <td>{{ asistente.nombreUsuario }}</td>
+            <td>{{ asistente.correoUsuario }}</td>
+            <td>
+              @if (asistente.pagoConfirmado) {
+                <span class="badge badge-ok">Confirmado</span>
+              } @else {
+                <span class="badge badge-pendiente">Pendiente</span>
+              }
+            </td>
+            <td>
+              <input
+                type="checkbox"
+                [checked]="asistente.asistio"
+                [disabled]="guardandoId() === asistente.inscripcionId"
+                (change)="toggleAsistencia(asistente)"
+              />
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

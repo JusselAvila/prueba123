@@ -1,0 +1,32 @@
+<div class="mis-eventos-container">
+  <div class="header">
+    <h1>Mis eventos</h1>
+    <a routerLink="/evento/crear" class="btn-crear">+ Crear evento</a>
+  </div>
+
+  @if (isLoading()) {
+    <p class="mensaje-estado">Cargando tus eventos...</p>
+  } @else if (errorMessage()) {
+    <p class="mensaje-estado error">{{ errorMessage() }}</p>
+  } @else if (eventos().length === 0) {
+    <p class="mensaje-estado">Todavía no has creado ningún evento.</p>
+  } @else {
+    <div class="eventos-grid">
+      @for (evento of eventos(); track evento.eventoId) {
+        <div class="evento-card">
+          <div class="evento-info">
+            <span class="evento-categoria">{{ evento.categoria }}</span>
+            <h3>{{ evento.nombre }}</h3>
+            <p class="evento-fecha">{{ evento.fecha | date: 'dd/MM/yyyy' }} · {{ evento.horario }}</p>
+            <p class="evento-cupos">{{ evento.inscritosActuales }} / {{ evento.aforoMaximo }} inscritos</p>
+          </div>
+
+          <div class="evento-acciones">
+            <a [routerLink]="['/evento', evento.eventoId]">Ver evento</a>
+            <a [routerLink]="['/evento', evento.eventoId, 'asistentes']">Ver asistentes</a>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

@@ -1,0 +1,16 @@
+<nav>
+  <a routerLink="/cartelera">Cartelera</a>
+  
+  <ng-container *ngIf="estaLogueado()">
+    <a routerLink="/evento/crear"> | Crear Evento</a>
+    <a routerLink="/mis-eventos"> | Mis Eventos</a>
+    <a routerLink="/mis-inscripciones"> | Mis Inscripciones</a>
+  </ng-container>
+
+  <a *ngIf="!estaLogueado()" routerLink="/login"> | Login</a>
+  <a *ngIf="!estaLogueado()" routerLink="/registro"> | Registro</a>
+  
+  <a *ngIf="estaLogueado()" (click)="cerrarSesion()" style="cursor:pointer"> | Logout</a>
+</nav>
+
+<router-outlet></router-outlet>

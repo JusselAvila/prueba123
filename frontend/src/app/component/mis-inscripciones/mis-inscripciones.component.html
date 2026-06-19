@@ -1,0 +1,39 @@
+<div class="inscripciones-container">
+  <h1>Mis inscripciones</h1>
+
+  @if (isLoading()) {
+    <p class="mensaje-estado">Cargando tus inscripciones...</p>
+  } @else if (errorMessage()) {
+    <p class="mensaje-estado error">{{ errorMessage() }}</p>
+  } @else if (inscripciones().length === 0) {
+    <p class="mensaje-estado">Todavía no te has inscrito a ningún evento.</p>
+  } @else {
+    <table class="tabla-inscripciones">
+      <thead>
+        <tr>
+          <th>Evento</th>
+          <th>Fecha de inscripción</th>
+          <th>Pago</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (inscripcion of inscripciones(); track inscripcion.inscripcionId) {
+          <tr>
+            <td>{{ inscripcion.nombreEvento }}</td>
+            <td>{{ inscripcion.fechaInscripcion | date }}</td> <td>{{ inscripcion.estado }}</td>
+            <td>
+              @if (!inscripcion.pagoConfirmado) {
+                <button (click)="verificarId(inscripcion.inscripcionId); confirmarPago(inscripcion.inscripcionId)">
+                  Confirmar Pago (Depurar)
+                </button>
+              } @else {
+                <span>Pagado</span>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

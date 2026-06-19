@@ -1,0 +1,58 @@
+<div class="cartelera-container">
+  <div class="cartelera-header">
+    <h1>Cartelera de eventos</h1>
+
+    @if (authService.estaAutenticado()) {
+      <!-- TODO: este botón debería ocultarse si el rol del usuario no es
+           "organizador". Por ahora se muestra a cualquier usuario autenticado
+           porque el guard solo valida sesión, no rol. -->
+      <a routerLink="/evento/crear" class="btn-crear">+ Crear evento</a>
+    }
+  </div>
+
+  <div class="filtros">
+    <select (change)="onCategoriaChange($event)">
+      @for (categoria of categorias(); track categoria) {
+        <option [value]="categoria">{{ categoria === 'todas' ? 'Todas las categorías' : categoria }}</option>
+      }
+    </select>
+
+    <label class="checkbox-label">
+      <input type="checkbox" (change)="onSoloGratuitosChange($event)" />
+      Solo gratuitos
+    </label>
+  </div>
+
+  @if (isLoading()) {
+    <p class="mensaje-estado">Cargando eventos...</p>
+  } @else if (errorMessage()) {
+    <p class="mensaje-estado error">{{ errorMessage() }}</p>
+  } @else if (eventosFiltrados().length === 0) {
+    <p class="mensaje-estado">No hay eventos que coincidan con el filtro.</p>
+  } @else {
+    <div class="eventos-grid">
+      @for (evento of eventosFiltrados(); track evento.eventoId) {
+        <a class="evento-card" [routerLink]="['/evento', evento.eventoId]">
+          @if (evento.urlImagen) {
+            <img [src]="evento.urlImagen" [alt]="evento.nombre" class="evento-imagen" />
+          } @else {
+            <div class="evento-imagen-placeholder"></div>
+          }
+
+          <div class="evento-info">
+            <span class="evento-categoria">{{ evento.categoria }}</span>
+            <h3>{{ evento.nombre }}</h3>
+            <p class="evento-fecha">{{ evento.fecha | date: 'dd/MM/yyyy' }} · {{ evento.horario }}</p>
+            <p class="evento-cupos">{{ evento.inscritosActuales }} / {{ evento.aforoMaximo }} inscritos</p>
+
+            @if (evento.esGratuito) {
+              <span class="evento-precio gratis">Gratis</span>
+            } @else {
+              <span class="evento-precio">Bs {{ evento.precio }}</span>
+            }
+          </div>
+        </a>
+      }
+    </div>
+  }
+</div>
