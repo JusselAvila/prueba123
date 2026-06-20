@@ -34,6 +34,7 @@
   padding: 0.85rem 1rem;
   text-align: left;
   font-size: 0.9rem;
+  vertical-align: middle;
 }
 
 .tabla-inscripciones thead {
@@ -51,19 +52,47 @@
   border-top: 1px solid #eee;
 }
 
-.badge {
-  padding: 0.2rem 0.6rem;
+.tabla-inscripciones tbody tr:hover {
+  background-color: #fafafa;
+}
+
+/* Botón "Confirmar Pago" — no tenía clase, así que lo tomamos por selector
+   dentro de la tabla. Si en el futuro agregas más botones a esta tabla,
+   dale una clase propia para no chocar con este estilo. */
+.tabla-inscripciones button {
+  background-color: #4f46e5;
+  color: #fff;
+  border: none;
+  padding: 0.45rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.tabla-inscripciones button:hover {
+  background-color: #4338ca;
+}
+
+/* "Pagado" — mismo trato visual que un badge, sin necesitar la clase .badge */
+.tabla-inscripciones td span {
+  display: inline-block;
+  background: #dcfce7;
+  color: #15803d;
+  padding: 0.25rem 0.65rem;
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 
-.badge-ok {
-  background: #dcfce7;
-  color: #15803d;
+/* Desinscribirse: acción destructiva, por eso es distinta a "Confirmar Pago" */
+.btn-desinscribir {
+  background-color: transparent !important;
+  color: #b91c1c !important;
+  border: 1px solid #fca5a5 !important;
 }
 
-.badge-pendiente {
-  background: #fef3c7;
-  color: #b45309;
+.btn-desinscribir:hover {
+  background-color: #fef2f2 !important;
 }

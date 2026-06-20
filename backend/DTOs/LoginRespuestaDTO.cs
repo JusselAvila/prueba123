@@ -1,6 +1,5 @@
 namespace EventosAPI.DTOs;
 
-
 public class LoginRespuestaDTO
 {
     public string Token { get; set; } = string.Empty;

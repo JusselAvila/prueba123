@@ -5,7 +5,6 @@ export const routes: Routes = [
   // Redirección por defecto
   { path: '', redirectTo: 'cartelera', pathMatch: 'full' },
 
-  // Rutas Públicas
   {
     path: 'cartelera',
     loadComponent: () => import('./component/cartelera/cartelera.component').then(m => m.CarteleraComponent)
@@ -14,6 +13,11 @@ export const routes: Routes = [
     path: 'evento/crear',
     loadComponent: () => import('./component/crear-evento/crear-evento.component').then(m => m.CrearEventoComponent),
     canActivate: [authGuard]
+  },
+  {
+  path: 'evento/editar/:id',
+  loadComponent: () => import('./component/crear-evento/crear-evento.component').then(m => m.CrearEventoComponent),
+  canActivate: [authGuard]
   },
   {
     path: 'evento/:id',
@@ -39,12 +43,14 @@ export const routes: Routes = [
     loadComponent: () => import('./component/mis-inscripciones/mis-inscripciones.component').then(m => m.MisInscripcionesComponent),
     canActivate: [authGuard]
   },
-
   {
     path: 'evento/:id/asistentes',
     loadComponent: () => import('./component/asistentes/asistentes.component').then(m => m.AsistentesComponent),
     canActivate: [authGuard]
   },
+  
+
+
 
   // Ruta 404
   { path: '**', redirectTo: 'cartelera' }

@@ -30,7 +30,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Configuración de CORS
 builder.Services.AddCors(options => {
     options.AddPolicy("AllowAll", policy => {
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins("http://localhost:6102")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -47,18 +47,16 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// --- Migraciones Automáticas ---
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     
-    // Intentar conectar hasta 10 veces
     int retries = 10;
     while (retries > 0)
     {
         try {
             dbContext.Database.Migrate();
-            break; // Si tiene éxito, salimos del bucle
+            break; 
         }
         catch (Exception ex) {
             retries--;
@@ -67,7 +65,7 @@ using (var scope = app.Services.CreateScope())
         }
     }
 }
-// Middleware
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();

@@ -39,6 +39,10 @@
   gap: 1.5rem;
   margin-bottom: 1.5rem;
   flex-wrap: wrap;
+  background: #fff;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
 }
 
 .filtros select {
@@ -46,6 +50,12 @@
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.filtros select:focus {
+  border-color: #4f46e5;
 }
 
 .checkbox-label {
@@ -54,6 +64,13 @@
   gap: 0.4rem;
   font-size: 0.9rem;
   color: #333;
+  cursor: pointer;
+}
+
+.checkbox-label input[type='checkbox'] {
+  accent-color: #4f46e5;
+  width: 16px;
+  height: 16px;
   cursor: pointer;
 }
 

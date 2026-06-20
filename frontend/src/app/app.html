@@ -1,16 +1,27 @@
-<nav>
-  <a routerLink="/cartelera">Cartelera</a>
-  
-  <ng-container *ngIf="estaLogueado()">
-    <a routerLink="/evento/crear"> | Crear Evento</a>
-    <a routerLink="/mis-eventos"> | Mis Eventos</a>
-    <a routerLink="/mis-inscripciones"> | Mis Inscripciones</a>
-  </ng-container>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="sidebar-links">
+      <a routerLink="/cartelera" routerLinkActive="active">Cartelera</a>
 
-  <a *ngIf="!estaLogueado()" routerLink="/login"> | Login</a>
-  <a *ngIf="!estaLogueado()" routerLink="/registro"> | Registro</a>
-  
-  <a *ngIf="estaLogueado()" (click)="cerrarSesion()" style="cursor:pointer"> | Logout</a>
-</nav>
+      @if (estaLogueado()) {
+        <a routerLink="/evento/crear" routerLinkActive="active">Crear Evento</a>
+        <a routerLink="/mis-eventos" routerLinkActive="active">Mis Eventos</a>
+        <a routerLink="/mis-inscripciones" routerLinkActive="active">Mis Inscripciones</a>
+      } @else {
+        <a routerLink="/login" routerLinkActive="active">Login</a>
+        <a routerLink="/registro" routerLinkActive="active">Registro</a>
+      }
+    </div>
 
-<router-outlet></router-outlet>
+    @if (estaLogueado()) {
+      <div class="sidebar-footer">
+        <span class="sidebar-usuario">Hola, {{ nombreUsuarioActual() }}</span>
+        <a (click)="cerrarSesion()" class="logout-link">Logout</a>
+      </div>
+    }
+  </nav>
+
+  <main class="content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

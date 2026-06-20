@@ -36,6 +36,22 @@ export class MisInscripcionesComponent implements OnInit {
     });
   }
 
+  desinscribir(idInscripcion: number): void {
+    const confirmacion = confirm('¿Estás seguro de que quieres desinscribirte? Si es de pago, se gestionará el reembolso.');
+    
+    if (!confirmacion) return;
+
+    this.inscripcionService.desinscribirse(idInscripcion).subscribe({
+      next: (res) => {
+        alert(res.mensaje);
+        this.cargarInscripciones(); 
+      },
+      error: (err) => {
+        const mensajeError = err.error?.mensaje || "Error al intentar desinscribirse.";
+        alert('Error: ' + mensajeError);
+      }
+    });
+  }
 
   confirmarPago(id: number) {
       console.log("=== DEPURACIÓN DE PAGO ===");

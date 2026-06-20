@@ -14,7 +14,6 @@ export interface InscripcionDetalle {
     estado: string;
 }
 
-
 export interface InscripcionCrear {
     eventoId: number;
     referenciaPago?: string;

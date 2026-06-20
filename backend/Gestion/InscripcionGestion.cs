@@ -11,102 +11,127 @@ public class InscripcionGestion
 
     public InscripcionGestion(AppDbContext contexto) => _contexto = contexto;
 
+    
     private async Task<Evento?> ObtenerEventoConInscripciones(int idEvento)
     {
-        return await _contexto.Eventos
-            .Include(e => e.Inscripciones)
-            .FirstOrDefaultAsync(e => e.EventoId == idEvento);
-    }
+        return await _contexto.Eventos.Include(e => e.Inscripciones).FirstOrDefaultAsync(e => e.EventoId == idEvento);
+    }    
 
     private async Task<Inscripcion?> ObtenerInscripcionConEventoYUsuario(int idInscripcion)
     {
-        return await _contexto.Inscripciones
-            .Include(i => i.Evento)
-            .Include(i => i.Usuario)
-            .FirstOrDefaultAsync(i => i.InscripcionId == idInscripcion);
+        return await _contexto.Inscripciones.Include(i => i.Evento).Include(i => i.Usuario).FirstOrDefaultAsync(i => i.InscripcionId == idInscripcion);
     }
-    public async Task<(bool Exito, string Mensaje)> InscribirseAEvento(int idEvento, int idUsuario, string? referenciaPago = null)
+
+    public async Task<(bool Exito, string Mensaje)> InscribirseAEvento(int idEvento, int UsuarioId, string? referenciaPago = null)
     {
-        var evento = await ObtenerEventoConInscripciones(idEvento);
+        var ExisteEvento = await ObtenerEventoConInscripciones(idEvento);
 
-        if (evento == null) return (false, "El evento no existe.");
-        if (evento.Inscripciones.Any(i => i.UsuarioId == idUsuario)) return (false, "Ya estás inscrito en este evento.");
-        if (evento.Inscripciones.Count >= evento.AforoMaximo) return (false, "Lo sentimos, no hay cupos disponibles.");
+        if (ExisteEvento == null) return (false, "El evento no existe.");
 
-        var nuevaInscripcion = new Inscripcion
+        if (ExisteEvento.UsuarioId == UsuarioId) return (false, "No puedes inscribirte a un evento que tú mismo creaste.");
+
+        if (ExisteEvento.Inscripciones.Any(i => i.UsuarioId == UsuarioId)) return (false, "Ya estás inscrito en este evento.");
+
+        if (ExisteEvento.Inscripciones.Count >= ExisteEvento.AforoMaximo) return (false, "Lo sentimos, no hay cupos disponibles.");
+
+        try
         {
-            EventoId = idEvento,
-            UsuarioId = idUsuario,
-            FechaInscripcion = DateTime.Now,
-            PagoConfirmado = evento.EsGratuito, 
-            ReferenciaPago = referenciaPago
-        };
+            var nuevaInscripcion = new Inscripcion
+            {
+                EventoId = idEvento,
+                UsuarioId = UsuarioId,
+                FechaInscripcion = DateTime.Now,
+                PagoConfirmado = ExisteEvento.EsGratuito, 
+                ReferenciaPago = referenciaPago
+            };
 
-        _contexto.Inscripciones.Add(nuevaInscripcion);
-        await _contexto.SaveChangesAsync();
-        
-        return (true, evento.EsGratuito ? "Inscripción exitosa." : "Inscripción registrada. Pendiente de pago.");
-    }
-
-    public async Task<(bool Exito, string Mensaje)> DesinscribirseDeEvento(int idEvento, int idUsuario)
-    {
-        var inscripcion = await _contexto.Inscripciones
-            .FirstOrDefaultAsync(i => i.EventoId == idEvento && i.UsuarioId == idUsuario);
-
-        if (inscripcion == null) return (false, "No estás inscrito en este evento.");
-
-        _contexto.Inscripciones.Remove(inscripcion);
-        await _contexto.SaveChangesAsync();
-        return (true, "Te has desinscrito correctamente del evento.");
-    }
-    public async Task<(bool Exito, string Mensaje)> ConfirmarPago(ConfirmarPagoDTO dto)
-    {
-        Console.WriteLine($"[DEBUG] Buscando InscripcionId: {dto.InscripcionId} con Ref: {dto.Referencia}");
-
-        var inscripcion = await _contexto.Inscripciones.FindAsync(dto.InscripcionId);
-        
-        if (inscripcion == null) 
+            _contexto.Inscripciones.Add(nuevaInscripcion);
+            await _contexto.SaveChangesAsync();
+            
+            return (true, ExisteEvento.EsGratuito ? "Inscripción exitosa." : "Inscripción registrada. Pendiente de pago.");
+        }
+        catch (Exception ex)
         {
-            return (false, $"Inscripción {dto.InscripcionId} no encontrada.");
+            return (false, "Ocurrió un error al procesar tu inscripción. Por favor, intenta de nuevo más tarde." + ex.Message);
+        }
+    }
+    public async Task<(bool Exito, string Mensaje)> DesinscribirsePorInscripcion(int idInscripcion, int idUsuario)
+    {
+        var inscripcion = await _contexto.Inscripciones.Include(i => i.Evento).FirstOrDefaultAsync(i => i.InscripcionId == idInscripcion && i.UsuarioId == idUsuario);
+
+        if (inscripcion == null) return (false, "Inscripción no encontrada o no pertenece al usuario.");
+
+        string mensajeAdicional = "";
+        if (inscripcion.PagoConfirmado && !inscripcion.Evento.EsGratuito)
+        {
+            mensajeAdicional = " Se ha iniciado el proceso de reembolso de " + inscripcion.Evento.Precio + " Bs.";
         }
 
-        inscripcion.PagoConfirmado = true;
-        // AQUÍ usamos la referencia real que viene del Frontend
-        inscripcion.ReferenciaPago = dto.Referencia; 
-        
-        await _contexto.SaveChangesAsync();
-        return (true, "El pago ha sido confirmado exitosamente.");
+        try 
+        {
+            _contexto.Inscripciones.Remove(inscripcion);
+            await _contexto.SaveChangesAsync();
+            return (true, "Te has desinscrito correctamente del evento." + mensajeAdicional);
+        }
+        catch (Exception ex)
+        {
+            return (false, "Error al intentar desinscribirse: " + ex.Message);
+        }
     }
-    public async Task<(bool Exito, string Mensaje)> AlternarAsistencia(int idInscripcion, int idUsuarioLogueado)
+
+    public async Task<(bool Exito, string Mensaje)> ConfirmarPago(ConfirmarPagoDTO d, int UsuarioId)
+    {
+        var inscripcion = await _contexto.Inscripciones.FirstOrDefaultAsync(i => i.InscripcionId == d.InscripcionId);
+
+        if (inscripcion == null) return (false, "Inscripción no encontrada.");
+
+        if (inscripcion.UsuarioId != UsuarioId) 
+            return (false, "No puedes confirmar el pago de una inscripción que no es tuya.");
+
+        try 
+        {
+            inscripcion.PagoConfirmado = true;
+
+            inscripcion.ReferenciaPago = d.Referencia;
+
+            await _contexto.SaveChangesAsync();
+
+            return (true, "El pago ha sido confirmado exitosamente.");
+        }
+        catch (Exception ex)
+        {
+            return (false, "Ocurrió un error al confirmar el pago. Intenta más tarde." + ex.Message);
+        }
+    }
+
+
+    public async Task<(bool Exito, string Mensaje)> AlternarAsistencia(int idInscripcion, int UsuarioId)
     {
         var inscripcion = await ObtenerInscripcionConEventoYUsuario(idInscripcion);
 
-        if (inscripcion == null) 
-            return (false, "Inscripción no encontrada.");
+        if (inscripcion == null) return (false, "Inscripción no encontrada.");
             
-        if (inscripcion.Evento.UsuarioId != idUsuarioLogueado)
-            return (false, "No tienes permisos para modificar la asistencia de este evento.");
+        if (inscripcion.Evento.UsuarioId != UsuarioId) return (false, "No tienes permisos para modificar la asistencia de este evento.");
 
         inscripcion.Asistio = !inscripcion.Asistio;
+        
         await _contexto.SaveChangesAsync();
         
         string estado = inscripcion.Asistio ? "marcado como asistente" : "marcado como ausente";
-        return (true, $"Usuario {estado} correctamente.");
+
+        return (true, "Su Asistencia Actualizada");
     }
 
-    public async Task<(List<AsistenciaDTO>? Asistentes, string? Error)> ObtenerAsistentes(int idEvento, int idUsuarioLogueado)
-    {
-        var evento = await _contexto.Eventos.FirstOrDefaultAsync(e => e.EventoId == idEvento);
-        
-        if (evento == null) 
-            return (null, "El evento no existe.");
-            
-        if (evento.UsuarioId != idUsuarioLogueado) 
-            return (null, "No tienes permisos para ver los asistentes de este evento.");
+    public async Task<(List<AsistenciaDTO>? Asistentes, string? Error)> ObtenerAsistentes(int EventoId, int UsuarioId)
+    {   
+        bool esCreador = await _contexto.Eventos.AnyAsync(e => e.EventoId == EventoId && e.UsuarioId == UsuarioId);
+
+        if (!esCreador) return (null, "Evento no encontrado o no tienes permisos.");
 
         var asistentes = await _contexto.Inscripciones
-            .Where(i => i.EventoId == idEvento)
-            .Select(i => new AsistenciaDTO {
+            .Where(i => i.EventoId == EventoId)
+            .Select(i => new AsistenciaDTO 
+            {
                 InscripcionId = i.InscripcionId,
                 NombreUsuario = i.Usuario.Nombre, 
                 CorreoUsuario = i.Usuario.Correo,
@@ -117,12 +142,9 @@ public class InscripcionGestion
 
         return (asistentes, null);
     }
-
-    public async Task<List<InscripcionDetalleDTO>> ObtenerInscripcionesPorUsuario(int idUsuario)
+      public async Task<List<InscripcionDetalleDTO>> ObtenerInscripcionesPorUsuario(int idUsuario)
     {
-        return await _contexto.Inscripciones
-            .Where(i => i.UsuarioId == idUsuario)
-            .Select(i => new InscripcionDetalleDTO
+        return await _contexto.Inscripciones.Where(i => i.UsuarioId == idUsuario).Select(i => new InscripcionDetalleDTO
             {
                 InscripcionId = i.InscripcionId,
                 NombreEvento = i.Evento.Nombre,
@@ -133,33 +155,13 @@ public class InscripcionGestion
                     : i.Asistio
                         ? "Asistió"
                         : "Confirmada"
-            })
-            .ToListAsync();
+            }).ToListAsync();
     }
-
     public async Task<bool> EstaInscrito(int idEvento, int idUsuario)
     {
-        return await _contexto.Inscripciones
-            .AnyAsync(i => i.EventoId == idEvento && i.UsuarioId == idUsuario);
+        return await _contexto.Inscripciones.AnyAsync(i => i.EventoId == idEvento && i.UsuarioId == idUsuario);
     }
 
-
-
-    public async Task<(bool Exito, string Mensaje)> ConfirmarPago(ConfirmarPagoDTO dto, int idUsuarioLogueado)
-{
-    var inscripcion = await _contexto.Inscripciones.FindAsync(dto.InscripcionId);
-
-    if (inscripcion == null)
-        return (false, $"Inscripción {dto.InscripcionId} no encontrada.");
-
-    if (inscripcion.UsuarioId != idUsuarioLogueado)
-        return (false, "No puedes confirmar el pago de una inscripción que no es tuya.");
-
-    inscripcion.PagoConfirmado = true;
-    inscripcion.ReferenciaPago = dto.Referencia;
-
-    await _contexto.SaveChangesAsync();
-    return (true, "El pago ha sido confirmado exitosamente.");
-}
+ 
     
 }

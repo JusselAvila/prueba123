@@ -7,11 +7,17 @@ import { ConfirmarPago } from '../modelos/pago.modelo';
 @Injectable({ providedIn: 'root' })
 export class InscripcionService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:5158/api/inscripcion';
+
+  private apiUrl = '/api/inscripcion';
 
   inscribirse(data: InscripcionCrear): Observable<any> {
     return this.http.post(`${this.apiUrl}/inscribirse`, data);
   }
+
+  desinscribirse(idInscripcion: number): Observable<{ mensaje: string }> {
+    return this.http.delete<{ mensaje: string }>(`/api/inscripcion/desinscribirse/${idInscripcion}`);
+  }
+
   misInscripciones(): Observable<InscripcionDetalle[]> {
     return this.http.get<InscripcionDetalle[]>(`${this.apiUrl}/mis-inscripciones`);
   }
@@ -32,4 +38,6 @@ export class InscripcionService {
   verificar(eventoId: number): Observable<boolean> {
   return this.http.get<boolean>(`${this.apiUrl}/esta-inscrito/${eventoId}`);
   }
+
+
 }

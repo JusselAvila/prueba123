@@ -22,7 +22,6 @@ public class TokenGestion
             new Claim(ClaimTypes.Role, rol)
         };
 
-        // Usamos la clave que leímos del archivo de configuración
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_key));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

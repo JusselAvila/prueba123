@@ -3,6 +3,8 @@ using EventosAPI.Models;
 using EventosAPI.DTOs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
+using System.Runtime.InteropServices;
 
 namespace EventosAPI.Gestion;
 
@@ -13,38 +15,47 @@ public class AuthGestion
 
     public AuthGestion(AppDbContext context) => _context = context;
 
-    public async Task<(bool Exito, string Mensaje)> RegistrarUsuario(RegistroDTO request)
+
+    private async Task<bool> CorreoYaRegistrado(string Correo)
     {
-    if (await _context.Usuarios.AnyAsync(u => u.Correo == request.Correo))
-            return (false, "El correo electrónico ya está registrado.");
-
-        var nuevoUsuario = new Usuario 
-        { 
-            Nombre = request.Nombre, 
-            Correo = request.Correo, 
-            Rol = "Usuario" 
-        };
-        
-        nuevoUsuario.ContraseñaHash = _passwordHasher.HashPassword(nuevoUsuario, request.Password);
-
-        _context.Usuarios.Add(nuevoUsuario);
-        await _context.SaveChangesAsync();
-        
-        return (true, "Usuario registrado exitosamente.");
+        return await _context.Usuarios.AnyAsync(u => u.Correo == Correo);
     }
 
-    public async Task<(Usuario? Usuario, string Mensaje)> ValidarLogin(LoginDTO request)
+    public async Task<(bool Exito, string Mensaje)> RegistrarUsuario(RegistroDTO r)
     {
-    var usuario = await _context.Usuarios.FirstOrDefaultAsync<Usuario>(u => u.Correo == request.Correo);        
+        if (await CorreoYaRegistrado(r.Correo)) return (false, "El correo electrónico ya está registrado.");
 
-        if (usuario == null)
-            return (null, "El correo no está registrado.");
+        try 
+        {
+            var nuevoUsuario = new Usuario
+            {
+                Nombre = r.Nombre,
+                Correo = r.Correo,
+                Rol = "Usuario"
+            };
 
-        var resultado = _passwordHasher.VerifyHashedPassword(usuario, usuario.ContraseñaHash, request.Password);
+            nuevoUsuario.ContraseñaHash = _passwordHasher.HashPassword(nuevoUsuario, r.Password);  
+
+            _context.Usuarios.Add(nuevoUsuario);
+            await _context.SaveChangesAsync();
+
+            return (true, "Usuario registrado exitosamente.");
+        }
+        catch (Exception ex)
+        {
+            return (false, "Error al registrar el usuario: " + ex.Message);
+        }
+    }
+    public async Task<(Usuario? Usuario, string Mensaje)> ValidarLogin(LoginDTO r)
+    {
+        var ExisteUsuario = await _context.Usuarios.FirstOrDefaultAsync(u => u.Correo == r.Correo);
+
+        if (ExisteUsuario == null) return (null, "El correo no está registrado.");
+
+        var resultado = _passwordHasher.VerifyHashedPassword(ExisteUsuario, ExisteUsuario.ContraseñaHash, r.Password);
         
-        if (resultado != PasswordVerificationResult.Success)
-            return (null, "La contraseña es incorrecta.");
+        if (resultado != PasswordVerificationResult.Success) return (null, "La contraseña es incorrecta.");
 
-        return (usuario, "Login exitoso.");
+        return (ExisteUsuario, "Login exitoso.");
     }
 }

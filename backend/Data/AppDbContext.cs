@@ -12,7 +12,6 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {   
-
         modelBuilder.Entity<Evento>()
             .HasOne(e => e.Creador)
             .WithMany(u => u.EventosCreados)

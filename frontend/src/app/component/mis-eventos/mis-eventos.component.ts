@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { EventoService } from '../../servicios/evento.servicio';
 import { EventoLista } from '../../modelos/evento.modelo';
 
+
 @Component({
   selector: 'app-mis-eventos',
   standalone: true,
@@ -39,4 +40,15 @@ export class MisEventosComponent implements OnInit {
       }
     });
   }
+
+  eliminarEvento(id: number): void {
+    this.eventoService.eliminarEvento(id).subscribe({
+      next: () => {
+        this.eventos.update(list => list.filter(e => e.eventoId !== id));
+      },
+      error: () => alert('Error al eliminar el evento.')
+    });
+  }
+
 }
+

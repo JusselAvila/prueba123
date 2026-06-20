@@ -13,23 +13,30 @@
         <tr>
           <th>Evento</th>
           <th>Fecha de inscripción</th>
-          <th>Pago</th>
           <th>Estado</th>
+          <th>Pago</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
         @for (inscripcion of inscripciones(); track inscripcion.inscripcionId) {
           <tr>
             <td>{{ inscripcion.nombreEvento }}</td>
-            <td>{{ inscripcion.fechaInscripcion | date }}</td> <td>{{ inscripcion.estado }}</td>
+            <td>{{ inscripcion.fechaInscripcion | date }}</td>
+            <td>{{ inscripcion.estado }}</td>
             <td>
               @if (!inscripcion.pagoConfirmado) {
-                <button (click)="verificarId(inscripcion.inscripcionId); confirmarPago(inscripcion.inscripcionId)">
-                  Confirmar Pago (Depurar)
+                <button (click)="confirmarPago(inscripcion.inscripcionId)">
+                  Confirmar Pago
                 </button>
               } @else {
                 <span>Pagado</span>
               }
+            </td>
+            <td>
+              <button class="btn-desinscribir" (click)="desinscribir(inscripcion.inscripcionId)">
+                Desinscribirse
+              </button>
             </td>
           </tr>
         }

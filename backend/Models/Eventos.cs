@@ -12,7 +12,6 @@ public class Evento
     [StringLength(100)]
     public string Nombre { get; set; } = string.Empty;
 
-    // Campos que te faltaban agregar:
     [Required]
     public string Descripcion { get; set; } = string.Empty;
     

@@ -81,18 +81,65 @@
 
 .evento-acciones {
   display: flex;
-  gap: 1rem;
+  flex-direction: column; /* vertical en móviles */
+  gap: 0.6rem;
   border-top: 1px solid #eee;
   padding-top: 0.75rem;
 }
 
-.evento-acciones a {
-  font-size: 0.85rem;
-  color: #4f46e5;
-  font-weight: 600;
-  text-decoration: none;
+@media (min-width: 480px) {
+  .evento-acciones {
+    flex-direction: row; /* horizontal si hay espacio */
+    justify-content: space-between;
+    align-items: center;
+  }
 }
 
-.evento-acciones a:hover {
+.grupo-consulta,
+.grupo-gestion {
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+/* Base compartida para todos los links/botón de acción de la tarjeta */
+.grupo-consulta a,
+.grupo-gestion a,
+.btn-accion {
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+/* "Ver evento" / "Asistentes" — acciones de consulta, tono neutro */
+.grupo-consulta a {
+  color: #666;
+}
+
+.grupo-consulta a:hover {
+  color: #333;
+  text-decoration: underline;
+}
+
+/* "Editar" — acción de gestión normal, mismo índigo de marca */
+.grupo-gestion a {
+  color: #4f46e5;
+}
+
+.grupo-gestion a:hover {
+  text-decoration: underline;
+}
+
+/* "Eliminar" — destructiva, mismo criterio que "Desinscribirse" en
+   mis-inscripciones: rojo, no índigo, para que se note que pesa distinto */
+.btn-accion {
+  background: none;
+  border: none;
+  color: #b91c1c;
+  padding: 0;
+}
+
+.btn-accion:hover {
   text-decoration: underline;
 }

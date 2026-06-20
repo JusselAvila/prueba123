@@ -1,6 +1,6 @@
 <div class="crear-container">
   <form class="crear-card" [formGroup]="eventoForm" (ngSubmit)="onSubmit()">
-    <h1>Crear evento</h1>
+    <h1>{{ isEditMode ? 'Editar evento' : 'Crear evento' }}</h1>
 
     <div class="form-row">
       <div class="form-group">
@@ -39,23 +39,23 @@
       }
     </div>
 
-    <div class="form-row">
-      <div class="form-group">
-        <label for="fecha">Fecha</label>
-        <input id="fecha" type="date" formControlName="fecha" />
-        @if (fecha?.invalid && fecha?.touched) {
-          <span class="field-error">La fecha es obligatoria.</span>
-        }
-      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fecha">Fecha</label>
+          <input id="fecha" type="date" formControlName="fecha" [min]="fechaMinima" />
+          @if (fecha?.invalid && fecha?.touched) {
+            <span class="field-error">La fecha debe ser a partir de hoy.</span>
+          }
+        </div>
 
-      <div class="form-group">
-        <label for="horario">Horario</label>
-        <input id="horario" type="text" formControlName="horario" placeholder="Ej: 18:00 - 20:00" />
-        @if (horario?.invalid && horario?.touched) {
-          <span class="field-error">El horario es obligatorio.</span>
-        }
+        <div class="form-group">
+          <label for="horario">Horario (Hora de inicio)</label>
+          <input id="horario" type="time" formControlName="horario" />
+          @if (horario?.invalid && horario?.touched) {
+            <span class="field-error">El horario es obligatorio.</span>
+          }
+        </div>
       </div>
-    </div>
 
     <div class="form-row">
       <div class="form-group">
@@ -117,9 +117,9 @@
 
     <button type="submit" [disabled]="isLoading()">
       @if (isLoading()) {
-        Creando evento...
+        {{ isEditMode ? 'Guardando...' : 'Creando evento...' }}
       } @else {
-        Crear evento
+        {{ isEditMode ? 'Guardar cambios' : 'Crear evento' }}
       }
     </button>
   </form>

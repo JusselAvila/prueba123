@@ -7,7 +7,7 @@ import { EventoLista, EventoDetalle, EventoCrear } from '../modelos/evento.model
 export class EventoService {
   private http = inject(HttpClient);
   // Ajusta esta URL a la de tu backend real
-  private apiUrl = 'http://localhost:5158/api/evento';
+  private apiUrl = '/api/evento';
 
   obtenerCartelera(): Observable<EventoLista[]> {
     return this.http.get<EventoLista[]>(`${this.apiUrl}/cartelera`);
@@ -23,6 +23,15 @@ export class EventoService {
 
   obtenerMisEventos(): Observable<EventoLista[]> {
     return this.http.get<EventoLista[]>(`${this.apiUrl}/mis-eventos`);
+    
+  }
+
+  actualizarEvento(id: number, evento: EventoCrear): Observable<any> {
+    return this.http.put(`/api/evento/${id}`, evento);
+  }
+
+  eliminarEvento(id: number): Observable<any> {
+  return this.http.delete(`/api/evento/${id}`);
   }
 
 }

@@ -20,10 +20,19 @@
             <p class="evento-fecha">{{ evento.fecha | date: 'dd/MM/yyyy' }} · {{ evento.horario }}</p>
             <p class="evento-cupos">{{ evento.inscritosActuales }} / {{ evento.aforoMaximo }} inscritos</p>
           </div>
-
+          
           <div class="evento-acciones">
-            <a [routerLink]="['/evento', evento.eventoId]">Ver evento</a>
-            <a [routerLink]="['/evento', evento.eventoId, 'asistentes']">Ver asistentes</a>
+            <div class="grupo-consulta">
+              <a [routerLink]="['/evento', evento.eventoId]">Ver evento</a>
+              <a [routerLink]="['/evento', evento.eventoId, 'asistentes']">Asistentes</a>
+            </div>
+            
+            <div class="grupo-gestion">
+              <a [routerLink]="['/evento/editar', evento.eventoId]">Editar</a>
+              <button type="button" (click)="eliminarEvento(evento.eventoId)" class="btn-accion">
+                Eliminar
+              </button>
+            </div>
           </div>
         </div>
       }

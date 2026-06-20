@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { EventoService } from '../../servicios/evento.servicio';
 import { EventoCrear } from '../../modelos/evento.modelo';
@@ -16,9 +16,14 @@ export class CrearEventoComponent implements OnInit {
   private fb = inject(FormBuilder);
   private eventoService = inject(EventoService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute); 
 
+  fechaMinima: string = new Date().toISOString().split('T')[0];
+  isEditMode = false;
+  eventoId: number | null = null;
   isLoading = signal(false);
   errorMessage = signal<string | null>(null);
+  
 
   // TODO: lista de categorías es una suposición (texto libre con sugerencias).
   // Confirma con el backend si existe un catálogo/enum fijo de categorías.
@@ -51,7 +56,7 @@ export class CrearEventoComponent implements OnInit {
   get categoria() { return this.eventoForm.get('categoria'); }
 
   ngOnInit(): void {
-    // Cuando el evento es gratuito forzamos precio a 0; si no, exigimos un precio > 0
+    // 1. La lógica de suscripción (la que ya tenías)
     this.esGratuito?.valueChanges.subscribe((esGratuito) => {
       if (esGratuito) {
         this.precio?.setValue(0);
@@ -63,6 +68,30 @@ export class CrearEventoComponent implements OnInit {
       }
       this.precio?.updateValueAndValidity();
     });
+
+    // 2. La lógica de detectar modo edición (la nueva)
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.isEditMode = true;
+      this.eventoId = Number(id);
+      this.cargarEventoParaEdicion(this.eventoId);
+    }
+  }
+
+  cargarEventoParaEdicion(id: number): void {
+  this.eventoService.obtenerDetalle(id).subscribe({
+    next: (evento) => {
+      // Si la fecha llega como objeto Date o string, la normalizamos
+      const fechaFormateada = new Date(evento.fecha).toISOString().split('T')[0];
+      
+      // Rellenamos el formulario
+      this.eventoForm.patchValue({
+        ...evento,
+        fecha: fechaFormateada
+      });
+    },
+    error: () => this.errorMessage.set('Error al cargar datos para editar.')
+  });
   }
 
   onSubmit(): void {
@@ -76,15 +105,20 @@ export class CrearEventoComponent implements OnInit {
 
     const evento: EventoCrear = this.eventoForm.getRawValue() as EventoCrear;
 
-    this.eventoService.crearEvento(evento).subscribe({
+    const operacion = (this.isEditMode && this.eventoId)
+      ? this.eventoService.actualizarEvento(this.eventoId, evento)
+      : this.eventoService.crearEvento(evento);
+
+    operacion.subscribe({
       next: () => {
         this.isLoading.set(false);
-        // TODO: confirma esta ruta una vez resuelto el endpoint de "mis-eventos"
         this.router.navigate(['/mis-eventos']);
       },
       error: () => {
         this.isLoading.set(false);
-        this.errorMessage.set('No se pudo crear el evento. Verifica los datos e intenta de nuevo.');
+        this.errorMessage.set(this.isEditMode 
+          ? 'No se pudo actualizar el evento.' 
+          : 'No se pudo crear el evento.');
       }
     });
   }
